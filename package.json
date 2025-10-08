@@ -1,0 +1,62 @@
+{
+  "name": "salesforce-quick-deploy",
+  "displayName": "Salesforce Quick Deploy",
+  "description": "One-click Salesforce deployment tool. Deploy files to your org with a single button click.",
+  "version": "0.0.1",
+  "publisher": "your-publisher-name",
+  "engines": {
+    "vscode": "^1.60.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "salesforce",
+    "sf",
+    "deploy",
+    "sfdx",
+    "quick deploy",
+    "deployinator"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tanpatrick/salesforce-quick-deploy"
+  },
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "salesforceQuickDeploy.deployFile",
+        "title": "Salesforce Quick Deploy: Deploy Current File",
+        "icon": "$(rocket)"
+      }
+    ],
+    "menus": {
+      "editor/title": [
+        {
+          "command": "salesforceQuickDeploy.deployFile",
+          "group": "navigation",
+          "when": "editorTextFocus"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "salesforceQuickDeploy.deployFile",
+          "when": "editorIsOpen"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "vscode:package": "vsce package",
+    "vscode:prepublish": "npm run compile",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.60.0",
+    "@types/node": "^16.x",
+    "typescript": "^4.9.5"
+  }
+}
