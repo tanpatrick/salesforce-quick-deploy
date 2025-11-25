@@ -66,12 +66,6 @@ jobs:
           npm run compile
           vsce package
 
-      - name: Create Git tag
-        if: steps.tag_version.outputs.new_tag != steps.tag_version.outputs.previous_tag
-        run: |
-          git tag "${{ steps.tag_version.outputs.new_tag }}"
-          git push origin "${{ steps.tag_version.outputs.new_tag }}"
-
       - name: Create GitHub Release
         if: steps.tag_version.outputs.new_tag != steps.tag_version.outputs.previous_tag
         id: create_release
