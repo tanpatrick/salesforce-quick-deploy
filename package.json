@@ -2,7 +2,7 @@
   "name": "salesforce-quick-deploy",
   "displayName": "Salesforce Quick Deploy",
   "description": "One-click Salesforce deployment tool. Deploy files to your org with a single button click.",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "publisher": "tanpatrick",
   "engines": {
     "vscode": "^1.60.0"
