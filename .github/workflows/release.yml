@@ -1,0 +1,82 @@
+name: Release
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install vsce
+        run: npm install -g @vscode/vsce
+
+      - name: Bump version and create tag
+        id: tag_version
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: patch
+          release_branches: main
+          dry_run: true
+
+      - name: Configure Git
+        if: steps.tag_version.outputs.new_tag != steps.tag_version.outputs.previous_tag
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Update package.json version
+        if: steps.tag_version.outputs.new_tag != steps.tag_version.outputs.previous_tag
+        run: |
+          NEW_VERSION="${{ steps.tag_version.outputs.new_version }}"
+          npm version $NEW_VERSION --no-git-tag-version
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to $NEW_VERSION [skip ci]"
+          git push
+
+      - name: Build VSIX
+        if: steps.tag_version.outputs.new_tag != steps.tag_version.outputs.previous_tag
+        run: |
+          npm run compile
+          vsce package
+
+      - name: Create Git tag
+        if: steps.tag_version.outputs.new_tag != steps.tag_version.outputs.previous_tag
+        run: |
+          git tag "${{ steps.tag_version.outputs.new_tag }}"
+          git push origin "${{ steps.tag_version.outputs.new_tag }}"
+
+      - name: Create GitHub Release
+        if: steps.tag_version.outputs.new_tag != steps.tag_version.outputs.previous_tag
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.tag_version.outputs.new_tag }}
+          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          body: ${{ steps.tag_version.outputs.changelog }}
+          files: |
+            *.vsix
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
