@@ -10,7 +10,12 @@ permissions:
 
 jobs:
   release:
+    permissions:
+      contents: write
     runs-on: ubuntu-latest
+
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
       - name: Checkout code
@@ -38,7 +43,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           default_bump: patch
           release_branches: main
-          dry_run: true
+          dry_run: false
 
       - name: Configure Git
         if: steps.tag_version.outputs.new_tag != steps.tag_version.outputs.previous_tag
@@ -69,14 +74,25 @@ jobs:
 
       - name: Create GitHub Release
         if: steps.tag_version.outputs.new_tag != steps.tag_version.outputs.previous_tag
-        uses: softprops/action-gh-release@v1
+        id: create_release
+        uses: actions/create-release@v1
         with:
+          token: ${{ secrets.GITHUB_TOKEN }}
           tag_name: ${{ steps.tag_version.outputs.new_tag }}
-          name: Release ${{ steps.tag_version.outputs.new_tag }}
+          release_name: Release ${{ steps.tag_version.outputs.new_tag }}
           body: ${{ steps.tag_version.outputs.changelog }}
-          files: |
-            *.vsix
           draft: false
           prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload VSIX assets
+        if: steps.tag_version.outputs.new_tag != steps.tag_version.outputs.previous_tag
+        uses: actions/upload-release-asset@v1
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./*.vsix
+          asset_name: ${{ steps.tag_version.outputs.new_tag }}.vsix
+          asset_content_type: application/octet-stream
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
